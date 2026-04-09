@@ -30,3 +30,20 @@ Frontend runs on `http://localhost:5173` and the API runs on `http://localhost:5
 ```bash
 npm run build
 ```
+
+## Deploy to Vercel
+
+This repo is set up so Vercel can:
+
+- build the React app into `public/`
+- serve the frontend statically
+- run the Express JWT API as a Vercel Function
+
+Steps:
+
+1. Import the GitHub repo into Vercel
+2. Set the build command to `npm run vercel-build`
+3. Leave the output directory empty because Vercel serves `public/` automatically
+4. Add an environment variable named `JWT_SECRET`
+
+After deployment, the frontend will call the API using the same Vercel domain via `/api/...`.
