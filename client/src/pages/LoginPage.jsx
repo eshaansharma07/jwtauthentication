@@ -7,11 +7,18 @@ const demoCredentials = {
   password: "password123"
 };
 
+const signupDefaults = {
+  name: "",
+  email: "",
+  password: ""
+};
+
 export default function LoginPage() {
+  const [mode, setMode] = useState("login");
   const [formData, setFormData] = useState(demoCredentials);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,18 +35,32 @@ export default function LoginPage() {
     setFormData((current) => ({ ...current, [name]: value }));
   };
 
+  const switchMode = (nextMode) => {
+    setMode(nextMode);
+    setError("");
+    setSubmitting(false);
+    setFormData(nextMode === "login" ? demoCredentials : signupDefaults);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
     setSubmitting(true);
 
     try {
-      await login(formData);
+      if (mode === "login") {
+        await login(formData);
+      } else {
+        await register(formData);
+      }
+
       navigate(redirectPath, { replace: true });
     } catch (requestError) {
       setError(
         requestError.response?.data?.message ||
-          "Login failed. Please check your credentials."
+          (mode === "login"
+            ? "Login failed. Please check your credentials."
+            : "Account creation failed. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -76,12 +97,49 @@ export default function LoginPage() {
 
       <section className="login-card">
         <div>
-          <p className="eyebrow">Demo login</p>
-          <h2>Welcome back</h2>
-          <p className="muted">Use the prefilled demo account to enter.</p>
+          <p className="eyebrow">
+            {mode === "login" ? "Demo login" : "Create account"}
+          </p>
+          <h2>{mode === "login" ? "Welcome back" : "Start your private session"}</h2>
+          <p className="muted">
+            {mode === "login"
+              ? "Use the prefilled demo account to enter."
+              : "Create a JWT-backed session instantly and enter the protected area."}
+          </p>
+        </div>
+
+        <div className="auth-toggle" role="tablist" aria-label="Authentication mode">
+          <button
+            type="button"
+            className={mode === "login" ? "toggle-button active" : "toggle-button"}
+            onClick={() => switchMode("login")}
+          >
+            Login
+          </button>
+          <button
+            type="button"
+            className={mode === "signup" ? "toggle-button active" : "toggle-button"}
+            onClick={() => switchMode("signup")}
+          >
+            Create account
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
+          {mode === "signup" ? (
+            <label>
+              Full name
+              <input
+                type="text"
+                name="name"
+                value={formData.name || ""}
+                onChange={handleChange}
+                placeholder="Eshaan Sharma"
+                required
+              />
+            </label>
+          ) : null}
+
           <label>
             Email
             <input
@@ -109,14 +167,24 @@ export default function LoginPage() {
           {error ? <p className="error-text">{error}</p> : null}
 
           <button type="submit" className="primary-button" disabled={submitting}>
-            {submitting ? "Signing in..." : "Login to continue"}
+            {submitting
+              ? mode === "login"
+                ? "Signing in..."
+                : "Creating account..."
+              : mode === "login"
+                ? "Login to continue"
+                : "Create account"}
           </button>
         </form>
 
         <p className="helper-text">
-          Private routes are available after login. Try{" "}
-          <Link to="/dashboard">dashboard</Link> directly to see the guard in
-          action.
+          {mode === "login"
+            ? "Private routes are available after login. Try "
+            : "Your new account signs in immediately and unlocks the protected routes. Try "}
+          <Link to="/dashboard">dashboard</Link>
+          {mode === "login"
+            ? " directly to see the guard in action."
+            : " after creating an account."}
         </p>
       </section>
     </div>

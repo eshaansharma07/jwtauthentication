@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getCurrentUser, loginRequest } from "../api/auth";
+import { getCurrentUser, loginRequest, registerRequest } from "../api/auth";
 
 const AuthContext = createContext(null);
 
@@ -37,6 +37,13 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const register = async (userData) => {
+    const data = await registerRequest(userData);
+    localStorage.setItem("token", data.token);
+    setUser(data.user);
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
@@ -48,6 +55,7 @@ export function AuthProvider({ children }) {
         user,
         loading,
         login,
+        register,
         logout,
         isAuthenticated: Boolean(user)
       }}
