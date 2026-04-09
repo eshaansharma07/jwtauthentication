@@ -1,17 +1,14 @@
-import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config.js";
+import { getBearerToken, verifyJwtToken } from "../utils/jwt.js";
 
 export function verifyToken(req, res, next) {
-  const authHeader = req.headers.authorization;
+  const token = getBearerToken(req.headers.authorization);
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!token) {
     return res.status(401).json({ message: "Access denied. Token missing." });
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = verifyJwtToken(token);
     req.user = decoded;
     next();
   } catch (error) {

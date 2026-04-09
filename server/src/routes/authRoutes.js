@@ -1,8 +1,7 @@
 import express from "express";
-import jwt from "jsonwebtoken";
-import { JWT_SECRET, TOKEN_EXPIRY } from "../config.js";
 import { demoUser } from "../data/user.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
+import { createToken } from "../utils/jwt.js";
 
 const router = express.Router();
 
@@ -13,16 +12,12 @@ router.post("/login", (req, res) => {
     return res.status(401).json({ message: "Invalid email or password." });
   }
 
-  const token = jwt.sign(
-    {
-      id: demoUser.id,
-      email: demoUser.email,
-      role: demoUser.role,
-      name: demoUser.name
-    },
-    JWT_SECRET,
-    { expiresIn: TOKEN_EXPIRY }
-  );
+  const token = createToken({
+    id: demoUser.id,
+    email: demoUser.email,
+    role: demoUser.role,
+    name: demoUser.name
+  });
 
   return res.json({
     token,
