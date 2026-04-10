@@ -2,15 +2,40 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const demoAccounts = [
+  {
+    label: "Admin",
+    name: "Aarav Admin",
+    email: "admin@auth.com",
+    password: "password123",
+    role: "Admin"
+  },
+  {
+    label: "Moderator",
+    name: "Mira Moderator",
+    email: "moderator@auth.com",
+    password: "password123",
+    role: "Moderator"
+  },
+  {
+    label: "User",
+    name: "Nikhil User",
+    email: "user@auth.com",
+    password: "password123",
+    role: "User"
+  }
+];
+
 const demoCredentials = {
-  email: "demo@auth.com",
+  email: demoAccounts[0].email,
   password: "password123"
 };
 
 const signupDefaults = {
   name: "",
   email: "",
-  password: ""
+  password: "",
+  role: "User"
 };
 
 export default function LoginPage() {
@@ -33,6 +58,15 @@ export default function LoginPage() {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const useDemoAccount = (account) => {
+    setMode("login");
+    setError("");
+    setFormData({
+      email: account.email,
+      password: account.password
+    });
   };
 
   const switchMode = (nextMode) => {
@@ -103,8 +137,8 @@ export default function LoginPage() {
           <h2>{mode === "login" ? "Welcome back" : "Start your private session"}</h2>
           <p className="muted">
             {mode === "login"
-              ? "Use the prefilled demo account to enter."
-              : "Create a JWT-backed session instantly and enter the protected area."}
+              ? "Use the role presets below to enter as admin, moderator, or user."
+              : "Create a JWT-backed session instantly and choose the dashboard role you want to preview."}
           </p>
         </div>
 
@@ -125,19 +159,51 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {mode === "login" ? (
+          <div className="demo-grid">
+            {demoAccounts.map((account) => (
+              <button
+                key={account.email}
+                type="button"
+                className="demo-card"
+                onClick={() => useDemoAccount(account)}
+              >
+                <span className="label">{account.label}</span>
+                <strong>{account.name}</strong>
+                <span>{account.email}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         <form onSubmit={handleSubmit} className="login-form">
           {mode === "signup" ? (
-            <label>
-              Full name
-              <input
-                type="text"
-                name="name"
-                value={formData.name || ""}
-                onChange={handleChange}
-                placeholder="Eshaan Sharma"
-                required
-              />
-            </label>
+            <>
+              <label>
+                Full name
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name || ""}
+                  onChange={handleChange}
+                  placeholder="Eshaan Sharma"
+                  required
+                />
+              </label>
+
+              <label>
+                Account role
+                <select
+                  name="role"
+                  value={formData.role || "User"}
+                  onChange={handleChange}
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Moderator">Moderator</option>
+                  <option value="User">User</option>
+                </select>
+              </label>
+            </>
           ) : null}
 
           <label>
@@ -179,11 +245,11 @@ export default function LoginPage() {
 
         <p className="helper-text">
           {mode === "login"
-            ? "Private routes are available after login. Try "
+            ? "Each preset opens a different protected dashboard. Try "
             : "Your new account signs in immediately and unlocks the protected routes. Try "}
           <Link to="/dashboard">dashboard</Link>
           {mode === "login"
-            ? " directly to see the guard in action."
+            ? " directly to compare admin, moderator, and user views."
             : " after creating an account."}
         </p>
       </section>

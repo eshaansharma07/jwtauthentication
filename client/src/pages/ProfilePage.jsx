@@ -1,7 +1,7 @@
 import { useAuth } from "../context/AuthContext";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   return (
     <section className="page-section">
@@ -21,6 +21,11 @@ export default function ProfilePage() {
           <strong>{user?.role}</strong>
         </article>
       </div>
+
+      <article className="token-card">
+        <span className="label">Source token</span>
+        <code>{token}</code>
+      </article>
     </section>
   );
 }

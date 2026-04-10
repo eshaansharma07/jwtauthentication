@@ -25,6 +25,7 @@ export default function AppShell() {
           <p className="label">Signed in as</p>
           <strong>{user?.name}</strong>
           <span>{user?.email}</span>
+          <span className="role-chip">{user?.role}</span>
           <button className="secondary-button" onClick={logout}>
             Logout
           </button>

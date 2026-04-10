@@ -5,7 +5,8 @@ export default function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed." });
   }
 
-  const { name, email, password } = req.body || {};
+  const { name, email, password, role } = req.body || {};
+  const allowedRoles = ["Admin", "Moderator", "User"];
 
   if (!name || !email || !password) {
     return res
@@ -17,7 +18,7 @@ export default function handler(req, res) {
     id: Date.now(),
     name: name.trim(),
     email: email.trim().toLowerCase(),
-    role: "Student"
+    role: allowedRoles.includes(role) ? role : "User"
   };
 
   const token = createToken(user);

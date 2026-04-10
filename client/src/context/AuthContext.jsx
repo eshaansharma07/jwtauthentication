@@ -5,6 +5,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,9 +20,11 @@ export function AuthProvider({ children }) {
       try {
         const data = await getCurrentUser();
         setUser(data.user);
+        setToken(token);
       } catch (error) {
         localStorage.removeItem("token");
         setUser(null);
+        setToken("");
       } finally {
         setLoading(false);
       }
@@ -33,6 +36,7 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     const data = await loginRequest(credentials);
     localStorage.setItem("token", data.token);
+    setToken(data.token);
     setUser(data.user);
     return data;
   };
@@ -40,12 +44,14 @@ export function AuthProvider({ children }) {
   const register = async (userData) => {
     const data = await registerRequest(userData);
     localStorage.setItem("token", data.token);
+    setToken(data.token);
     setUser(data.user);
     return data;
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    setToken("");
     setUser(null);
   };
 
@@ -53,6 +59,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
+        token,
         loading,
         login,
         register,

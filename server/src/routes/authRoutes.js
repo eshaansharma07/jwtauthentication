@@ -1,5 +1,5 @@
 import express from "express";
-import { demoUser } from "../data/user.js";
+import { findDemoUser } from "../data/user.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 import { createToken } from "../utils/jwt.js";
 
@@ -7,8 +7,9 @@ const router = express.Router();
 
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
+  const demoUser = findDemoUser(email, password);
 
-  if (email !== demoUser.email || password !== demoUser.password) {
+  if (!demoUser) {
     return res.status(401).json({ message: "Invalid email or password." });
   }
 

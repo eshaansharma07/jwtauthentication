@@ -1,4 +1,4 @@
-import { demoUser } from "../../server/src/data/user.js";
+import { findDemoUser } from "../../server/src/data/user.js";
 import { createToken } from "../../server/src/utils/jwt.js";
 
 export default function handler(req, res) {
@@ -7,8 +7,9 @@ export default function handler(req, res) {
   }
 
   const { email, password } = req.body || {};
+  const demoUser = findDemoUser(email, password);
 
-  if (email !== demoUser.email || password !== demoUser.password) {
+  if (!demoUser) {
     return res.status(401).json({ message: "Invalid email or password." });
   }
 
