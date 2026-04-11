@@ -1,8 +1,14 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getDefaultRouteForRole } from "../utils/roles";
 
 export default function AppShell() {
   const { user, logout } = useAuth();
+  const roleLinks = [
+    { to: "/dashboard", label: "Overview" },
+    { to: getDefaultRouteForRole(user?.role), label: `${user?.role} Panel` },
+    { to: "/profile", label: "Profile" }
+  ];
 
   return (
     <div className="shell">
@@ -17,8 +23,11 @@ export default function AppShell() {
         </div>
 
         <nav className="nav-links">
-          <NavLink to="/dashboard">Dashboard</NavLink>
-          <NavLink to="/profile">Profile</NavLink>
+          {roleLinks.map((link) => (
+            <NavLink key={link.to} to={link.to}>
+              {link.label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="profile-card">

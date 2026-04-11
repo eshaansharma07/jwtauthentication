@@ -1,6 +1,10 @@
 # JWT Authentication Demo
 
-A full-stack JWT authentication example with React, React Router, Express, Axios, and protected routes backed by server-side token verification.
+A combined full-stack experiment that merges:
+
+- React login form state management with validation and submit feedback
+- JWT-protected routes with server-side token verification
+- Role-based access control for admin, moderator, and user dashboards
 
 ## Features
 
@@ -11,6 +15,7 @@ A full-stack JWT authentication example with React, React Router, Express, Axios
 - Token stored in `localStorage`
 - Protected routes guarded in React Router
 - Private API access verified by Express middleware
+- Role-restricted frontend routes and API endpoints
 
 ## Demo Credentials
 

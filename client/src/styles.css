@@ -355,7 +355,7 @@ select {
 
 .content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .page-section {
@@ -399,6 +399,12 @@ select {
   word-break: break-all;
   color: var(--cyan);
   line-height: 1.7;
+}
+
+.dashboard-loader {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
 }
 
 .detail-item {

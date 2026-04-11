@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, loginRequest, registerRequest } from "../api/auth";
+import { getDefaultRouteForRole } from "../utils/roles";
 
 const AuthContext = createContext(null);
 
@@ -64,7 +65,8 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
-        isAuthenticated: Boolean(user)
+        isAuthenticated: Boolean(user),
+        defaultRoute: getDefaultRouteForRole(user?.role)
       }}
     >
       {children}

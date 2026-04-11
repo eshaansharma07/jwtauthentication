@@ -34,4 +34,19 @@ export async function getSecretMessage() {
   return response.data;
 }
 
+export async function getAdminPanel() {
+  const response = await api.get("/rbac/admin");
+  return response.data;
+}
+
+export async function getModeratorPanel() {
+  const response = await api.get("/rbac/moderator");
+  return response.data;
+}
+
+export async function getUserPanel() {
+  const response = await api.get("/rbac/user");
+  return response.data;
+}
+
 export default api;

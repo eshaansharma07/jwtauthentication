@@ -1,43 +1,13 @@
 import { useEffect, useState } from "react";
+import Alert from "@mui/material/Alert";
 import { getSecretMessage } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import { getDefaultRouteForRole } from "../utils/roles";
 
 export default function DashboardPage() {
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user, token } = useAuth();
-
-  const dashboardConfig = {
-    Admin: {
-      title: "Admin control dashboard",
-      summary: "Monitor platform health, elevated access, and system-wide decisions.",
-      cards: [
-        { label: "Privilege scope", value: "Full access", text: "Review protected admin capabilities and sensitive controls." },
-        { label: "Audit queue", value: "12 items", text: "Investigate events that need administrative review." },
-        { label: "System status", value: "Healthy", text: "Critical services and token verification are operating normally." }
-      ]
-    },
-    Moderator: {
-      title: "Moderator operations dashboard",
-      summary: "Handle flagged content, community actions, and session moderation tools.",
-      cards: [
-        { label: "Flagged reports", value: "8 open", text: "Respond to moderation alerts that require attention." },
-        { label: "Review tools", value: "Enabled", text: "Access tools that help keep protected spaces safe." },
-        { label: "Response time", value: "Fast", text: "JWT verification keeps moderation routes protected and responsive." }
-      ]
-    },
-    User: {
-      title: "User workspace dashboard",
-      summary: "See your protected account space, token details, and personal access state.",
-      cards: [
-        { label: "Account access", value: "Active", text: "Your personal area is unlocked after server-side JWT verification." },
-        { label: "Session type", value: "Protected", text: "Private routes stay available while your token remains valid." },
-        { label: "Profile mode", value: "Standard", text: "You can review your account details and token source below." }
-      ]
-    }
-  };
-
-  const currentDashboard = dashboardConfig[user?.role] || dashboardConfig.User;
 
   useEffect(() => {
     const loadOverview = async () => {
@@ -54,37 +24,53 @@ export default function DashboardPage() {
 
   return (
     <section className="page-section">
-      <p className="eyebrow">Dashboard</p>
-      <h2>{currentDashboard.title}</h2>
+      <p className="eyebrow">Combined experiment</p>
+      <h2>Login validation, JWT protection, and RBAC in one flow</h2>
       <p className="muted">
-        {currentDashboard.summary}
+        This view combines the three experiments into one app: client-side form
+        validation, protected route verification, and role-based access control.
       </p>
 
+      <Alert severity="success" sx={{ mt: 3, borderRadius: 3 }}>
+        Authenticated as {user?.role}. Your role-specific route is{" "}
+        {getDefaultRouteForRole(user?.role)}.
+      </Alert>
+
       <div className="stats-grid">
-        {currentDashboard.cards.map((card) => (
-          <article className="info-card" key={card.label}>
-            <span className="label">{card.label}</span>
-            <strong>{card.value}</strong>
-            <p>{card.text}</p>
-          </article>
-        ))}
+        <article className="info-card">
+          <span className="label">CO2 focus</span>
+          <strong>Responsive React UI</strong>
+          <p>Interactive login, controlled inputs, and role-aware navigation.</p>
+        </article>
+
+        <article className="info-card">
+          <span className="label">CO4 focus</span>
+          <strong>Debug + secure flow</strong>
+          <p>JWT validation, protected APIs, and feedback-driven auth states.</p>
+        </article>
+
+        <article className="info-card accent-card">
+          <span className="label">RBAC state</span>
+          <strong>{user?.role}</strong>
+          <p>Frontend routes and API endpoints are both filtered by role.</p>
+        </article>
       </div>
 
       <div className="stats-grid">
         <article className="info-card">
-          <span className="label">Route status</span>
-          <strong>Protected</strong>
-          <p>React Router guard checked your session before rendering.</p>
+          <span className="label">Client validation</span>
+          <strong>React Hook Form</strong>
+          <p>Controlled login fields validate before the auth request runs.</p>
         </article>
 
         <article className="info-card">
-          <span className="label">Verification status</span>
+          <span className="label">JWT verification</span>
           <strong>{loading ? "Checking..." : "Verified"}</strong>
           <p>{loading ? "Validating your token." : overview?.roleMessage}</p>
         </article>
 
         <article className="info-card accent-card">
-          <span className="label">Server message</span>
+          <span className="label">Protected feedback</span>
           <strong>{loading ? "Loading..." : overview?.message}</strong>
           <p>{loading ? "Fetching private data." : overview?.details}</p>
         </article>

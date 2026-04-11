@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import authRoutes from "./routes/authRoutes.js";
 import privateRoutes from "./routes/privateRoutes.js";
+import rbacRoutes from "./routes/rbacRoutes.js";
 
 const app = express();
 
@@ -39,5 +40,6 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/private", privateRoutes);
+app.use("/api/rbac", rbacRoutes);
 
 export default app;

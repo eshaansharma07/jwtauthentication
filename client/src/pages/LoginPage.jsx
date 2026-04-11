@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import MenuItem from "@mui/material/MenuItem";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import { Controller, useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getDefaultRouteForRole } from "../utils/roles";
 
 const demoAccounts = [
   {
@@ -40,30 +49,35 @@ const signupDefaults = {
 
 export default function LoginPage() {
   const [mode, setMode] = useState("login");
-  const [formData, setFormData] = useState(demoCredentials);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const { login, register, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm({
+    defaultValues: demoCredentials
+  });
 
-  const redirectPath = location.state?.from?.pathname || "/dashboard";
+  const fallbackRoute = getDefaultRouteForRole(user?.role);
+  const redirectPath = location.state?.from?.pathname || fallbackRoute;
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard", { replace: true });
+      navigate(fallbackRoute, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((current) => ({ ...current, [name]: value }));
-  };
+  }, [fallbackRoute, isAuthenticated, navigate]);
 
   const useDemoAccount = (account) => {
     setMode("login");
     setError("");
-    setFormData({
+    setSuccess(`Loaded ${account.role} demo credentials.`);
+    reset({
       email: account.email,
       password: account.password
     });
@@ -72,23 +86,31 @@ export default function LoginPage() {
   const switchMode = (nextMode) => {
     setMode(nextMode);
     setError("");
+    setSuccess("");
     setSubmitting(false);
-    setFormData(nextMode === "login" ? demoCredentials : signupDefaults);
+    reset(nextMode === "login" ? demoCredentials : signupDefaults);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const onSubmit = async (values) => {
     setError("");
+    setSuccess("");
     setSubmitting(true);
 
     try {
-      if (mode === "login") {
-        await login(formData);
-      } else {
-        await register(formData);
-      }
+      const result =
+        mode === "login" ? await login(values) : await register(values);
 
-      navigate(redirectPath, { replace: true });
+      setSuccess(
+        mode === "login"
+          ? `Authentication successful for ${result.user.role}.`
+          : `Account created with ${result.user.role} access.`
+      );
+
+      setTimeout(() => {
+        navigate(redirectPath || getDefaultRouteForRole(result.user.role), {
+          replace: true
+        });
+      }, 600);
     } catch (requestError) {
       setError(
         requestError.response?.data?.message ||
@@ -104,27 +126,28 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <section className="hero-panel">
-        <p className="eyebrow">Protected Routes with JWT Verification</p>
-        <h1>Build trust into your route flow, not just your UI.</h1>
+        <p className="eyebrow">Combined Login + JWT + RBAC</p>
+        <h1>Validate first, authenticate next, authorize by role.</h1>
         <p className="muted">
-          This frontend stores the JWT in localStorage and asks the backend to
-          verify it before private routes render.
+          This single experiment combines React state management, client-side
+          form validation, backend JWT verification, protected routes, and
+          role-based access control.
         </p>
         <div className="feature-grid">
           <article>
             <span>01</span>
-            <h3>Route guards</h3>
-            <p>Unauthenticated users are redirected to login automatically.</p>
+            <h3>React Hook Form</h3>
+            <p>Controlled inputs validate before any authentication request.</p>
           </article>
           <article>
             <span>02</span>
-            <h3>Server validation</h3>
-            <p>Express middleware verifies every protected request.</p>
+            <h3>JWT protection</h3>
+            <p>Express-style API routes verify tokens before private data loads.</p>
           </article>
           <article>
             <span>03</span>
-            <h3>Persistent session</h3>
-            <p>Reloading the app keeps access if the token is still valid.</p>
+            <h3>RBAC guards</h3>
+            <p>Admin, moderator, and user routes enforce role-specific access.</p>
           </article>
         </div>
       </section>
@@ -132,13 +155,17 @@ export default function LoginPage() {
       <section className="login-card">
         <div>
           <p className="eyebrow">
-            {mode === "login" ? "Demo login" : "Create account"}
+            {mode === "login" ? "Secure login form" : "Create account"}
           </p>
-          <h2>{mode === "login" ? "Welcome back" : "Start your private session"}</h2>
+          <h2>
+            {mode === "login"
+              ? "Validated sign in with feedback"
+              : "Create a role-based protected session"}
+          </h2>
           <p className="muted">
             {mode === "login"
-              ? "Use the role presets below to enter as admin, moderator, or user."
-              : "Create a JWT-backed session instantly and choose the dashboard role you want to preview."}
+              ? "Material UI provides alerts and spinner feedback while React Hook Form manages state."
+              : "Choose a role and create a JWT-backed session that unlocks the right dashboard."}
           </p>
         </div>
 
@@ -176,72 +203,129 @@ export default function LoginPage() {
           </div>
         ) : null}
 
-        <form onSubmit={handleSubmit} className="login-form">
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} className="login-form">
           {mode === "signup" ? (
             <>
-              <label>
-                Full name
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name || ""}
-                  onChange={handleChange}
-                  placeholder="Eshaan Sharma"
-                  required
-                />
-              </label>
+              <Controller
+                name="name"
+                control={control}
+                rules={{ required: "Full name is required." }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Full name"
+                    placeholder="Eshaan Sharma"
+                    error={Boolean(errors.name)}
+                    helperText={errors.name?.message}
+                    fullWidth
+                  />
+                )}
+              />
 
-              <label>
-                Account role
-                <select
-                  name="role"
-                  value={formData.role || "User"}
-                  onChange={handleChange}
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="Moderator">Moderator</option>
-                  <option value="User">User</option>
-                </select>
-              </label>
+              <Controller
+                name="role"
+                control={control}
+                rules={{ required: "Role selection is required." }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    select
+                    label="Account role"
+                    error={Boolean(errors.role)}
+                    helperText={errors.role?.message}
+                    fullWidth
+                  >
+                    <MenuItem value="Admin">Admin</MenuItem>
+                    <MenuItem value="Moderator">Moderator</MenuItem>
+                    <MenuItem value="User">User</MenuItem>
+                  </TextField>
+                )}
+              />
             </>
           ) : null}
 
-          <label>
-            Email
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="demo@auth.com"
-              required
-            />
-          </label>
+          <Controller
+            name="email"
+            control={control}
+            rules={{
+              required: "Email is required.",
+              pattern: {
+                value: /\S+@\S+\.\S+/,
+                message: "Enter a valid email address."
+              }
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                type="email"
+                label="Email"
+                placeholder="demo@auth.com"
+                error={Boolean(errors.email)}
+                helperText={errors.email?.message}
+                fullWidth
+              />
+            )}
+          />
 
-          <label>
-            Password
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="password123"
-              required
-            />
-          </label>
+          <Controller
+            name="password"
+            control={control}
+            rules={{
+              required: "Password is required.",
+              minLength: {
+                value: 8,
+                message: "Password must be at least 8 characters."
+              }
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                type="password"
+                label="Password"
+                placeholder="password123"
+                error={Boolean(errors.password)}
+                helperText={errors.password?.message}
+                fullWidth
+              />
+            )}
+          />
 
-          {error ? <p className="error-text">{error}</p> : null}
+          <Stack spacing={1}>
+            {success ? <Alert severity="success">{success}</Alert> : null}
+            {error ? <Alert severity="error">{error}</Alert> : null}
+          </Stack>
 
-          <button type="submit" className="primary-button" disabled={submitting}>
-            {submitting
-              ? mode === "login"
-                ? "Signing in..."
-                : "Creating account..."
-              : mode === "login"
-                ? "Login to continue"
-                : "Create account"}
-          </button>
-        </form>
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={submitting}
+            sx={{
+              py: 1.6,
+              borderRadius: "999px",
+              fontWeight: 800,
+              textTransform: "none",
+              background: "linear-gradient(90deg, #ff9150, #ffb36a)",
+              color: "#18120d",
+              "&:hover": {
+                background: "linear-gradient(90deg, #ff9150, #ffb36a)"
+              }
+            }}
+          >
+            {submitting ? (
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CircularProgress size={18} sx={{ color: "#18120d" }} />
+                <span>
+                  {mode === "login" ? "Signing in..." : "Creating account..."}
+                </span>
+              </Stack>
+            ) : mode === "login" ? (
+              "Login to continue"
+            ) : (
+              "Create account"
+            )}
+          </Button>
+        </Box>
 
         <p className="helper-text">
           {mode === "login"
@@ -249,7 +333,7 @@ export default function LoginPage() {
             : "Your new account signs in immediately and unlocks the protected routes. Try "}
           <Link to="/dashboard">dashboard</Link>
           {mode === "login"
-            ? " directly to compare admin, moderator, and user views."
+            ? " to review the combined experiment flow."
             : " after creating an account."}
         </p>
       </section>
